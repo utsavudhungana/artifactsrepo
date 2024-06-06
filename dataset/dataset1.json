@@ -1,0 +1,89 @@
+{
+	"name": "dataset1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "gitsynapsetesting-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "query_data.csv",
+				"fileSystem": "rootfs"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "TenantId",
+				"type": "String"
+			},
+			{
+				"name": "TimeGenerated [UTC]",
+				"type": "String"
+			},
+			{
+				"name": "OperationName",
+				"type": "String"
+			},
+			{
+				"name": "OperationVersion",
+				"type": "String"
+			},
+			{
+				"name": "Category",
+				"type": "String"
+			},
+			{
+				"name": "ResultType",
+				"type": "String"
+			},
+			{
+				"name": "ResultSignature",
+				"type": "String"
+			},
+			{
+				"name": "ResultDescription",
+				"type": "String"
+			},
+			{
+				"name": "CorrelationId",
+				"type": "String"
+			},
+			{
+				"name": "Identity",
+				"type": "String"
+			},
+			{
+				"name": "Location",
+				"type": "String"
+			},
+			{
+				"name": "RequestUri",
+				"type": "String"
+			},
+			{
+				"name": "ClientCorrelationId",
+				"type": "String"
+			},
+			{
+				"name": "SourceSystem",
+				"type": "String"
+			},
+			{
+				"name": "Type",
+				"type": "String"
+			},
+			{
+				"name": "_ResourceId",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

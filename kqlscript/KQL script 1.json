@@ -1,0 +1,12 @@
+{
+	"name": "KQL script 1",
+	"properties": {
+		"content": {
+			"query": "asfasdf",
+			"metadata": {
+				"language": "kql"
+			}
+		},
+		"type": "KqlQuery"
+	}
+}
