@@ -1,8 +1,12 @@
 {
-	"name": "Notebook 1",
+	"name": "Notebook2",
 	"properties": {
 		"nbformat": 4,
 		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "pool1",
+			"type": "BigDataPoolReference"
+		},
 		"sessionProperties": {
 			"driverMemory": "28g",
 			"driverCores": 4,
@@ -14,17 +18,33 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "dc591994-8e56-458f-85a8-77574b15662e"
+				"spark.autotune.trackingId": "9feaf290-3ab8-47ab-b21d-1d45e60237e4"
 			}
 		},
 		"metadata": {
 			"saveOutput": true,
-			"synapse_widget": {
-				"version": "0.1"
-			},
 			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "python"
+			},
 			"language_info": {
 				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/c22d6c8c-cd0d-43df-b94e-1545d95cf4a3/resourceGroups/Testsynaspe/providers/Microsoft.Synapse/workspaces/gitsynapsetesting/bigDataPools/pool1",
+				"name": "pool1",
+				"type": "Spark",
+				"endpoint": "https://gitsynapsetesting.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pool1",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 30
 		},
@@ -33,7 +53,8 @@
 				"cell_type": "code",
 				"source": [
 					"newnotebook updated in github from branch newbranch"
-				]
+				],
+				"execution_count": null
 			}
 		]
 	}
