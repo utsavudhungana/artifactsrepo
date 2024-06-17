@@ -18,7 +18,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "9feaf290-3ab8-47ab-b21d-1d45e60237e4"
+				"spark.autotune.trackingId": "0df41e58-dee4-4f80-b841-40761da82f8b"
 			}
 		},
 		"metadata": {
@@ -51,8 +51,14 @@
 		"cells": [
 			{
 				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python"
+					}
+				},
 				"source": [
-					"newnotebook updated in github from branch newbranch"
+					"%%pyspark\r\n",
+					"spark.sql(\"CREATE DATABASE IF NOT EXISTS database1\")"
 				],
 				"execution_count": null
 			}
