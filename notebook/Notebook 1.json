@@ -1,66 +1,66 @@
 {
-	"name": "Notebook 1",
-	"properties": {
-		"nbformat": 4,
-		"nbformat_minor": 2,
-		"bigDataPool": {
-			"referenceName": "pool1",
-			"type": "BigDataPoolReference"
-		},
-		"sessionProperties": {
-			"driverMemory": "28g",
-			"driverCores": 4,
-			"executorMemory": "28g",
-			"executorCores": 4,
-			"numExecutors": 2,
-			"conf": {
-				"spark.dynamicAllocation.enabled": "false",
-				"spark.dynamicAllocation.minExecutors": "2",
-				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "54c3b864-7f46-47e0-91ed-a15cf9e1b3cd"
-			}
-		},
-		"metadata": {
-			"saveOutput": true,
-			"enableDebugMode": false,
-			"kernelspec": {
-				"name": "synapse_pyspark",
-				"display_name": "Synapse PySpark"
-			},
-			"language_info": {
-				"name": "python"
-			},
-			"a365ComputeOptions": {
-				"id": "/subscriptions/c22d6c8c-cd0d-43df-b94e-1545d95cf4a3/resourceGroups/Testsynaspe/providers/Microsoft.Synapse/workspaces/gitsynapsetesting/bigDataPools/pool1",
-				"name": "pool1",
-				"type": "Spark",
-				"endpoint": "https://gitsynapsetesting.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pool1",
-				"auth": {
-					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net"
-				},
-				"sparkVersion": "3.4",
-				"nodeCount": 3,
-				"cores": 4,
-				"memory": 28,
-				"automaticScaleJobs": false
-			},
-			"sessionKeepAliveTimeout": 30
-		},
-		"cells": [
-			{
-				"cell_type": "code",
-				"metadata": {
-					"microsoft": {
-						"language": "python"
-					}
-				},
-				"source": [
-					"%%pyspark\n",
-					"spark.sql(\"CREATE TABLE IF NOT EXISTS database1.Newtable USING CSV LOCATION 'abfss://rootfs@devteststoragesynap.dfs.core.windows.net/query_data.csv'\")"
-				],
-				"execution_count": 6
-			}
-		]
-	}
+    "name": "Notebook 1",
+    "properties": {
+        "nbformat": 4,
+        "nbformat_minor": 2,
+        "bigDataPool": {
+            "referenceName": "pool1",
+            "type": "BigDataPoolReference"
+        },
+        "sessionProperties": {
+            "driverMemory": "28g",
+            "driverCores": 4,
+            "executorMemory": "28g",
+            "executorCores": 4,
+            "numExecutors": 2,
+            "conf": {
+                "spark.dynamicAllocation.enabled": "false",
+                "spark.dynamicAllocation.minExecutors": "2",
+                "spark.dynamicAllocation.maxExecutors": "2",
+                "spark.autotune.trackingId": "54c3b864-7f46-47e0-91ed-a15cf9e1b3cd"
+            }
+        },
+        "metadata": {
+            "saveOutput": true,
+            "enableDebugMode": false,
+            "kernelspec": {
+                "name": "synapse_pyspark",
+                "display_name": "Synapse PySpark"
+            },
+            "language_info": {
+                "name": "python"
+            },
+            "a365ComputeOptions": {
+                "id": "/subscriptions/c22d6c8c-cd0d-43df-b94e-1545d95cf4a3/resourceGroups/Testsynaspe/providers/Microsoft.Synapse/workspaces/gitsynapsetesting2it/bigDataPools/pool1",
+                "name": "pool1",
+                "type": "Spark",
+                "endpoint": "https://gitsynapsetesting2it.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pool1",
+                "auth": {
+                    "type": "AAD",
+                    "authResource": "https://dev.azuresynapse.net"
+                },
+                "sparkVersion": "3.4",
+                "nodeCount": 3,
+                "cores": 4,
+                "memory": 28,
+                "automaticScaleJobs": false
+            },
+            "sessionKeepAliveTimeout": 30
+        },
+        "cells": [
+            {
+                "cell_type": "code",
+                "metadata": {
+                    "microsoft": {
+                        "language": "python"
+                    }
+                },
+                "source": [
+                    "%%pyspark\n",
+                    "spark.sql(\"CREATE TABLE IF NOT EXISTS database1.Newtable USING CSV LOCATION 'abfss://rootfs@devteststoragesynap2it.dfs.core.windows.net/query_data.csv'\")"
+                ],
+                "execution_count": 6
+            }
+        ]
+    }
 }

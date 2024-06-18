@@ -1,14 +1,8 @@
 import json
 import argparse
 import os
-import datetime
 
-
-# Usage:
-# python replace_json_text.py --input_file "path/to/input.json" --output_dir "path/to/output/directory" --replacements "old1=new1,old2=new2"
-
-
-def replace_text_in_json(input_file, output_dir, replace_dict):
+def replace_text_in_json(input_file, replace_dict):
     # Read the input JSON file
     with open(input_file, 'r') as file:
         data = json.load(file)
@@ -33,23 +27,36 @@ def replace_text_in_json(input_file, output_dir, replace_dict):
     # Replace substrings based on replace_dict
     replace_values(data, replace_dict)
 
-    # Create a dynamic output file name based on the input file name and current timestamp
-    input_filename = os.path.basename(input_file)
-    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    output_filename = f"{os.path.splitext(input_filename)[0]}_{timestamp}.json"
-    output_file = os.path.join(output_dir, output_filename)
+    return data
 
+def save_json_to_file(data, output_file):
     # Write the modified content to the output JSON file
     with open(output_file, 'w') as file:
         json.dump(data, file, indent=4)
 
     print(f'Replacement done. Check {output_file} for the modified JSON.')
 
-# Example usage:
+def main(input_dir, replace_dict):
+    if not os.path.isdir(input_dir):
+        print(f"Error: {input_dir} is not a valid directory.")
+        return
+
+    json_files = [f for f in os.listdir(input_dir) if f.endswith('.json') and 'Default' not in f]
+
+    if not json_files:
+        print(f"No JSON files found in the directory: {input_dir}")
+        return
+
+    for json_file in json_files:
+        input_file = os.path.join(input_dir, json_file)
+        modified_data = replace_text_in_json(input_file, replace_dict)
+        
+        # Write back to the same file
+        save_json_to_file(modified_data, input_file)
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Replace text in a JSON file based on a replacement dictionary.')
-    parser.add_argument('--input_file', type=str, required=True, help='Path to the input JSON file.')
-    parser.add_argument('--output_dir', type=str, required=True, help='Directory to save the output JSON file.')
+    parser = argparse.ArgumentParser(description='Replace text in all JSON files in a directory based on a replacement dictionary.')
+    parser.add_argument('--input_dir', type=str, required=True, help='Path to the input directory containing JSON files.')
     parser.add_argument('--replacements', type=str, required=True, help='Comma-separated key=value pairs for text replacement. Example: old1=new1,old2=new2')
 
     args = parser.parse_args()
@@ -57,4 +64,4 @@ if __name__ == "__main__":
     # Parse replacements argument into a dictionary
     replacements = dict(pair.split('=') for pair in args.replacements.split(','))
 
-    replace_text_in_json(args.input_file, args.output_dir, replacements)
+    main(args.input_dir, replacements)
