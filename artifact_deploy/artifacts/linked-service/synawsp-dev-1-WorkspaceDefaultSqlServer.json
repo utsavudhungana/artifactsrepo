@@ -1,0 +1,21 @@
+{
+  "id": "/subscriptions/79eb76cd-5db5-4886-b786-55c9e8dc9523/resourceGroups/rg-syna-learning/providers/Microsoft.Synapse/workspaces/synawsp-dev-1/linkedservices/synawsp-dev-1-WorkspaceDefaultSqlServer",
+  "name": "synawsp-dev-1-WorkspaceDefaultSqlServer",
+  "type": "Microsoft.Synapse/workspaces/linkedservices",
+  "properties": {
+    "typeProperties": {
+      "connectionString": "Data Source=tcp:synawsp-dev-1.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+    },
+    "parameters": {
+      "DBName": {
+        "type": "String"
+      }
+    },
+    "type": "AzureSqlDW",
+    "connectVia": {
+      "referenceName": "AutoResolveIntegrationRuntime",
+      "type": "IntegrationRuntimeReference"
+    }
+  },
+  "etag": "82001e85-0000-0700-0000-6684d1a30000"
+}

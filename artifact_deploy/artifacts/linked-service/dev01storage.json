@@ -1,0 +1,18 @@
+{
+  "id": "/subscriptions/79eb76cd-5db5-4886-b786-55c9e8dc9523/resourceGroups/rg-syna-learning/providers/Microsoft.Synapse/workspaces/synawsp-dev-1/linkedservices/dev01storage",
+  "name": "dev01storage",
+  "type": "Microsoft.Synapse/workspaces/linkedservices",
+  "properties": {
+    "annotations": [],
+    "type": "AzureBlobFS",
+    "typeProperties": {
+      "url": "https://synawspdev01.dfs.core.windows.net/",
+      "encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIlNZTkFQU0VAMDU5QzZGNzQtNzMwMC00QURBLUE3Q0YtMzUwOERDRDZFN0JGXzhmNjg5NDY5LWZmMTMtNDc5MS1iNmRiLTkzNmUxMGQyZTk1OCINCn0="
+    },
+    "connectVia": {
+      "referenceName": "AutoResolveIntegrationRuntime",
+      "type": "IntegrationRuntimeReference"
+    }
+  },
+  "etag": "3a005e64-0000-0700-0000-669ff6fc0000"
+}

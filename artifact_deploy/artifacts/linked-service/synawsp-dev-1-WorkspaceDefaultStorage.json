@@ -1,0 +1,16 @@
+{
+  "id": "/subscriptions/79eb76cd-5db5-4886-b786-55c9e8dc9523/resourceGroups/rg-syna-learning/providers/Microsoft.Synapse/workspaces/synawsp-dev-1/linkedservices/synawsp-dev-1-WorkspaceDefaultStorage",
+  "name": "synawsp-dev-1-WorkspaceDefaultStorage",
+  "type": "Microsoft.Synapse/workspaces/linkedservices",
+  "properties": {
+    "typeProperties": {
+      "url": "https://dlsasynapselearningsuyog.dfs.core.windows.net"
+    },
+    "type": "AzureBlobFS",
+    "connectVia": {
+      "referenceName": "AutoResolveIntegrationRuntime",
+      "type": "IntegrationRuntimeReference"
+    }
+  },
+  "etag": "82002e85-0000-0700-0000-6684d1a40000"
+}
