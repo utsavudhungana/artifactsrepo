@@ -1,0 +1,49 @@
+{
+  "activities": [
+    {
+      "additionalProperties": null,
+      "conf": {},
+      "configurationType": null,
+      "dependsOn": [],
+      "description": null,
+      "driverSize": null,
+      "executorSize": null,
+      "linkedServiceName": null,
+      "name": "Notebook1",
+      "notebook": {
+        "referenceName": "Test_Notebook1",
+        "type": "NotebookReference"
+      },
+      "numExecutors": null,
+      "onInactiveMarkAs": null,
+      "parameters": null,
+      "policy": {
+        "additionalProperties": null,
+        "retry": 0,
+        "retryIntervalInSeconds": 30,
+        "secureInput": false,
+        "secureOutput": false,
+        "timeout": "0.12:00:00"
+      },
+      "sparkConfig": null,
+      "sparkPool": null,
+      "state": null,
+      "targetSparkConfiguration": null,
+      "type": "SynapseNotebook",
+      "userProperties": []
+    }
+  ],
+  "additionalProperties": null,
+  "annotations": [],
+  "concurrency": null,
+  "description": null,
+  "etag": "730175db-0000-0700-0000-668f0e950000",
+  "folder": null,
+  "id": "/subscriptions/79eb76cd-5db5-4886-b786-55c9e8dc9523/resourceGroups/rg-syna-learning/providers/Microsoft.Synapse/workspaces/synawsp-dev-1/pipelines/Test_Pipeline1",
+  "name": "Test_Pipeline1",
+  "parameters": null,
+  "resourceGroup": "rg-syna-learning",
+  "runDimensions": null,
+  "type": "Microsoft.Synapse/workspaces/pipelines",
+  "variables": null
+}
