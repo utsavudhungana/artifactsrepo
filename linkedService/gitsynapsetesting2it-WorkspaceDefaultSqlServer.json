@@ -1,9 +1,9 @@
 {
-	"name": "gitsynapsetesting-WorkspaceDefaultSqlServer",
+	"name": "gitsynapsetesting2it-WorkspaceDefaultSqlServer",
 	"type": "Microsoft.Synapse/workspaces/linkedservices",
 	"properties": {
 		"typeProperties": {
-			"connectionString": "Data Source=tcp:gitsynapsetesting.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+			"connectionString": "Data Source=tcp:gitsynapsetesting2it.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
 		"parameters": {
 			"DBName": {

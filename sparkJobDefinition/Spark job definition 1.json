@@ -1,0 +1,34 @@
+{
+	"name": "Spark job definition 1",
+	"properties": {
+		"targetBigDataPool": {
+			"referenceName": "pool2",
+			"type": "BigDataPoolReference"
+		},
+		"requiredSparkVersion": "3.4",
+		"language": "python",
+		"scanFolder": false,
+		"jobProperties": {
+			"name": "Spark job definition 1",
+			"file": "abfss://rootfs@devteststoragesynap.dfs.core.windows.net/query_data.csv",
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "1",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "afe2a419-a6e3-4104-8b43-5c623f88402c",
+				"spark.synapse.context.sjdname": "Spark job definition 1"
+			},
+			"args": [],
+			"jars": [],
+			"pyFiles": [
+				""
+			],
+			"files": [],
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2
+		}
+	}
+}

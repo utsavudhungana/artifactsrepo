@@ -2,7 +2,7 @@
 	"name": "dataset1",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "gitsynapsetesting-WorkspaceDefaultStorage",
+			"referenceName": "gitsynapsetesting2it-WorkspaceDefaultStorage",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],

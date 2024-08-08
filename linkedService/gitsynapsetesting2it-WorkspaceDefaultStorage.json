@@ -1,9 +1,9 @@
 {
-	"name": "gitsynapsetesting-WorkspaceDefaultStorage",
+	"name": "gitsynapsetesting2it-WorkspaceDefaultStorage",
 	"type": "Microsoft.Synapse/workspaces/linkedservices",
 	"properties": {
 		"typeProperties": {
-			"url": "https://devteststoragesynap.dfs.core.windows.net"
+			"url": "https://devteststoragesynap2it.dfs.core.windows.net"
 		},
 		"type": "AzureBlobFS",
 		"connectVia": {
