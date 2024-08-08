@@ -33,4 +33,4 @@ done
 # Optional: Commit and push changes to GitLab
 git add artifacts/$aztype/*
 git commit -m "Save $aztype artifacts"
-git push origin main
+git push origin feature2
