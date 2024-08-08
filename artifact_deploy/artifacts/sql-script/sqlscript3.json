@@ -1,0 +1,20 @@
+{
+  "id": "/subscriptions/79eb76cd-5db5-4886-b786-55c9e8dc9523/resourceGroups/rg-syna-learning/providers/Microsoft.Synapse/workspaces/synawsp-dev-1/sqlscripts/sqlscript3",
+  "name": "sqlscript3",
+  "type": "Microsoft.Synapse/workspaces/sqlscripts",
+  "properties": {
+    "content": {
+      "query": "-- testing 2\n\n--changed here",
+      "metadata": {
+        "language": "sql"
+      },
+      "currentConnection": {
+        "databaseName": "master",
+        "poolName": "Built-in"
+      },
+      "resultLimit": 5000
+    },
+    "type": "SqlQuery"
+  },
+  "etag": "3e000428-0000-0700-0000-66b5563e0000"
+}

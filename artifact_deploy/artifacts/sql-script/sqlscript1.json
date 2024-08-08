@@ -1,0 +1,20 @@
+{
+  "id": "/subscriptions/79eb76cd-5db5-4886-b786-55c9e8dc9523/resourceGroups/rg-syna-learning/providers/Microsoft.Synapse/workspaces/synawsp-dev-1/sqlscripts/sqlscript1",
+  "name": "sqlscript1",
+  "type": "Microsoft.Synapse/workspaces/sqlscripts",
+  "properties": {
+    "content": {
+      "query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://synawspdev01.dfs.core.windows.net/test/query_data.csv',\n        FORMAT = 'CSV',\n        PARSER_VERSION = '2.0'\n    ) AS [result]",
+      "metadata": {
+        "language": "sql"
+      },
+      "currentConnection": {
+        "databaseName": "master",
+        "poolName": "Built-in"
+      },
+      "resultLimit": 5000
+    },
+    "type": "SqlQuery"
+  },
+  "etag": "3d00c8b8-0000-0700-0000-66b542590000"
+}
