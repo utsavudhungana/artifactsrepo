@@ -1,0 +1,37 @@
+{
+  "id": "/subscriptions/79eb76cd-5db5-4886-b786-55c9e8dc9523/resourceGroups/rg-syna-learning/providers/Microsoft.Synapse/workspaces/synawsp-dev-1/sparkjobdefinitions/SparkDefinition1",
+  "name": "SparkDefinition1",
+  "type": "Microsoft.Synapse/workspaces/sparkjobdefinitions",
+  "properties": {
+    "targetBigDataPool": {
+      "referenceName": "pool1",
+      "type": "BigDataPoolReference"
+    },
+    "requiredSparkVersion": "3.4",
+    "language": "python",
+    "scanFolder": false,
+    "jobProperties": {
+      "name": "SparkDefinition1",
+      "file": "abfss://test@synawspdev01.dfs.core.windows.net/query_data.csv",
+      "conf": {
+        "spark.dynamicAllocation.enabled": "false",
+        "spark.dynamicAllocation.minExecutors": "1",
+        "spark.dynamicAllocation.maxExecutors": "2",
+        "spark.autotune.trackingId": "2fce269e-5bbf-4c68-8a03-2dc9ae3adddf",
+        "spark.synapse.context.sjdname": "SparkDefinition1"
+      },
+      "args": [],
+      "jars": [],
+      "pyFiles": [
+        ""
+      ],
+      "files": [],
+      "driverMemory": "28g",
+      "driverCores": 4,
+      "executorMemory": "28g",
+      "executorCores": 4,
+      "numExecutors": 2
+    }
+  },
+  "etag": "3a00f269-0000-0700-0000-669ff8150000"
+}

@@ -2,6 +2,11 @@ import json
 import argparse
 import os
 
+#This program updates values of all json file contents in a directory from old to new replacements. 
+#Usage:
+#python FindReplace.py --input_dir "path/to/input/directory" --replacements "old1=new1,old2=new2"
+
+
 def replace_text_in_json(input_file, replace_dict):
     # Read the input JSON file
     with open(input_file, 'r') as file:
