@@ -3,23 +3,26 @@
 // 3. Push to ACR using ORAS: The ORAS Go library is used to upload the compressed artifact to the Azure Container Registry.
 
 
-
 package main
 
 import (
 	"archive/zip"
 	"bytes"
-	"flag"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 
-	gitlab "github.com/xanzy/go-gitlab"
 	"oras.land/oras-go/v2/registry/remote"
 	"oras.land/oras-go/v2/registry/remote/auth"
+)
+
+// Define your variable values here (replace with actual values or fetch from environment)
+var (
+	acrURL     = "your-acr-url.azurecr.io"
+	repository = "your-repository-name"
+	tag        = "your-tag"
+	username   = "your-username"
+	password   = "your-password"
 )
 
 // Compress files into a ZIP archive
@@ -53,7 +56,7 @@ func compressFiles(filePaths []string) ([]byte, error) {
 }
 
 // Push the compressed artifact to Azure Container Registry using ORAS
-func pushToACR(acrURL, repository, tag, username, password string, artifact []byte) error {
+func pushToACR(artifact []byte) error {
 	ref := fmt.Sprintf("%s/%s:%s", acrURL, repository, tag)
 	remoteRepo, err := remote.NewRepository(ref)
 	if err != nil {
@@ -65,7 +68,7 @@ func pushToACR(acrURL, repository, tag, username, password string, artifact []by
 		Password: password,
 	}
 
-	// Push the artifact using ORAS (oras-go)
+	// Push the artifact using ORAS
 	desc, err := remoteRepo.PushBytes(nil, "application/vnd.zip", artifact)
 	if err != nil {
 		return fmt.Errorf("failed to push artifact to ACR: %v", err)
@@ -75,62 +78,32 @@ func pushToACR(acrURL, repository, tag, username, password string, artifact []by
 	return nil
 }
 
-func getFilePathsFromGitLabDirectory(repoID int, ref, gitlabURL, privateToken string) ([]string, error) {
-	git, err := gitlab.NewClient(privateToken, gitlab.WithBaseURL(gitlabURL))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create GitLab client: %v", err)
-	}
-
-	project, _, err := git.Projects.GetProject(repoID, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get project: %v", err)
-	}
-
-	opts := &gitlab.ListTreeOptions{
-		Ref: &ref,
-	}
-
-	files, _, err := git.Repositories.ListTree(project.ID, opts)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list directory tree: %v", err)
-	}
-
+func getFilePathsFromRootDirectory() ([]string, error) {
+	// Fetch all JSON files from the current directory
 	var filePaths []string
-	for _, file := range files {
-		if file.Type == "blob" {
-			filePaths = append(filePaths, file.Path)
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
+
+		if filepath.Ext(path) == ".json" {
+			filePaths = append(filePaths, path)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list files in directory: %v", err)
 	}
 
 	return filePaths, nil
 }
 
 func main() {
-	repoID := flag.Int("repo_id", 0, "The ID of the GitLab repository.")
-	ref := flag.String("ref", "", "The branch name or commit hash.")
-	acrURL := flag.String("acr_url", "", "The URL of the Azure Container Registry.")
-	repository := flag.String("repository", "", "The repository name in ACR.")
-	tag := flag.String("tag", "", "The tag for the artifact in ACR.")
-	username := flag.String("username", "", "The username for ACR.")
-	password := flag.String("password", "", "The password for ACR.")
-	flag.Parse()
-
-	if *repoID == 0 || *ref == "" || *acrURL == "" || *repository == "" || *tag == "" || *username == "" || *password == "" {
-		fmt.Println("All parameters are required.")
-		os.Exit(1)
-	}
-
-	gitlabURL := "https://gitlab.com"
-	privateToken := os.Getenv("GITLAB_PRIVATE_TOKEN")
-	if privateToken == "" {
-		fmt.Println("GITLAB_PRIVATE_TOKEN environment variable must be set.")
-		os.Exit(1)
-	}
-
-	// Get list of files from GitLab
-	filePaths, err := getFilePathsFromGitLabDirectory(*repoID, *ref, gitlabURL, privateToken)
+	// Get list of JSON files in the root directory
+	filePaths, err := getFilePathsFromRootDirectory()
 	if err != nil {
-		fmt.Printf("Failed to retrieve file paths from repository: %v\n", err)
+		fmt.Printf("Failed to retrieve file paths from directory: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -142,7 +115,7 @@ func main() {
 	}
 
 	// Push the compressed artifact to ACR using ORAS
-	err = pushToACR(*acrURL, *repository, *tag, *username, *password, artifact)
+	err = pushToACR(artifact)
 	if err != nil {
 		fmt.Printf("Failed to push to ACR: %v\n", err)
 		os.Exit(1)

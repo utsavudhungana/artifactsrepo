@@ -8,19 +8,28 @@ package main
 import (
 	"archive/zip"
 	"bytes"
-	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
-	"os/exec"
+	"path/filepath"
 
 	"oras.land/oras-go/v2/registry/remote"
 	"oras.land/oras-go/v2/registry/remote/auth"
 )
 
-// Download the compressed artifact from ACR
-func pullFromACR(acrURL, repository, tag, username, password string) ([]byte, error) {
+// Define your variable values here (replace with actual values or fetch from environment)
+var (
+	acrURL             = "your-acr-url.azurecr.io"
+	repository         = "your-repository-name"
+	tag                = "your-tag"
+	username           = "your-username"
+	password           = "your-password"
+	targetWorkspaceName = "your-synapse-workspace"
+)
+
+// Pull the compressed artifact from ACR using ORAS
+func pullFromACR() ([]byte, error) {
 	ref := fmt.Sprintf("%s/%s:%s", acrURL, repository, tag)
 	remoteRepo, err := remote.NewRepository(ref)
 	if err != nil {
@@ -32,58 +41,62 @@ func pullFromACR(acrURL, repository, tag, username, password string) ([]byte, er
 		Password: password,
 	}
 
-	// Pull the artifact using ORAS
-	desc, artifact, err := remoteRepo.FetchBytes(nil)
+	// Pull the artifact
+	var artifact bytes.Buffer
+	_, err = remoteRepo.FetchBytes(nil, &artifact)
 	if err != nil {
 		return nil, fmt.Errorf("failed to pull artifact from ACR: %v", err)
 	}
 
-	fmt.Printf("Pulled artifact with digest %s from ACR\n", desc.Digest)
-	return artifact, nil
+	fmt.Println("Successfully pulled artifact from ACR")
+	return artifact.Bytes(), nil
 }
 
-// Unzip the artifact
+// Unzip the artifact into individual files
 func unzipArtifact(artifact []byte) (map[string][]byte, error) {
-	r, err := zip.NewReader(bytes.NewReader(artifact), int64(len(artifact)))
-	if err != nil {
-		return nil, fmt.Errorf("failed to open zip file: %v", err)
-	}
-
 	files := make(map[string][]byte)
-	for _, f := range r.File {
-		rc, err := f.Open()
+	r := bytes.NewReader(artifact)
+	zr, err := zip.NewReader(r, int64(len(artifact)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read zip archive: %v", err)
+	}
+
+	for _, file := range zr.File {
+		rc, err := file.Open()
 		if err != nil {
-			return nil, fmt.Errorf("failed to open file in zip: %v", err)
+			return nil, fmt.Errorf("failed to open file %s: %v", file.Name, err)
 		}
 
-		content, err := ioutil.ReadAll(rc)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read file from zip: %v", err)
-		}
-		files[f.Name] = content
+		content, err := io.ReadAll(rc)
 		rc.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to read file %s: %v", file.Name, err)
+		}
+
+		files[file.Name] = content
 	}
+
 	return files, nil
 }
 
-// Send PUT request to Synapse for each artifact
-func sendPutRequest(url, bearerToken string, bodyContent []byte) (int, string, error) {
-	req, err := http.NewRequest(http.MethodPut, url, ioutil.NopCloser(bytes.NewReader(bodyContent)))
+// Send PUT request to Synapse workspace
+func sendPutRequest(url, accessToken string, bodyContent []byte) (int, string, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(bodyContent))
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to create PUT request: %v", err)
 	}
 
+	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+bearerToken)
 
-	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to send PUT request: %v", err)
 	}
 	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to read response body: %v", err)
 	}
@@ -91,20 +104,39 @@ func sendPutRequest(url, bearerToken string, bodyContent []byte) (int, string, e
 	return resp.StatusCode, string(respBody), nil
 }
 
-func main() {
-	acrURL := flag.String("acr_url", "", "The URL of the Azure Container Registry.")
-	repository := flag.String("repository", "", "The repository name in ACR.")
-	tag := flag.String("tag", "", "The tag for the artifact in ACR.")
-	username := flag.String("username", "", "The username for ACR.")
-	password := flag.String("password", "", "The password for ACR.")
-	targetWorkspaceName := flag.String("target_workspace_name", "", "The name of the Synapse workspace.")
-	flag.Parse()
-
-	if *acrURL == "" || *repository == "" || *tag == "" || *username == "" || *password == "" || *targetWorkspaceName == "" {
-		fmt.Println("All parameters are required.")
-		os.Exit(1)
+// Determine artifact type based on file path
+func determineArtifactTypeFromFile(filePath string) string {
+	switch {
+	case filepath.Dir(filePath) == "notebook":
+		return "notebook"
+	case filepath.Dir(filePath) == "sqlscript":
+		return "sqlscript"
+	case filepath.Dir(filePath) == "kqlscript":
+		return "kqlscript"
+	case filepath.Dir(filePath) == "sparkJobDefinition":
+		return "sparkJobDefinition"
+	case filepath.Dir(filePath) == "dataset":
+		return "dataset"
+	case filepath.Dir(filePath) == "linkedService":
+		return "linkedService"
+	case filepath.Dir(filePath) == "integrationRuntime":
+		return "integrationRuntime"
+	case filepath.Dir(filePath) == "managedVirtualNetwork":
+		return "managedVirtualNetwork"
+	case filepath.Dir(filePath) == "pipeline":
+		return "pipeline"
+	default:
+		return "unknown"
 	}
+}
 
+// Construct API URL for publishing to Synapse
+func constructAPIURL(baseURL, filePath, artifactType string) string {
+	fileName := filepath.Base(filePath)
+	return fmt.Sprintf("%s/%s/%s?api-version=2020-12-01", baseURL, artifactType, fileName)
+}
+
+func main() {
 	// Fetch Bearer token
 	accessToken, err := azCLI("account get-access-token --resource=https://dev.azuresynapse.net/ --query accessToken --output tsv")
 	if err != nil {
@@ -112,10 +144,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	baseAPIURL := fmt.Sprintf("https://%s.dev.azuresynapse.net", *targetWorkspaceName)
+	baseAPIURL := fmt.Sprintf("https://%s.dev.azuresynapse.net", targetWorkspaceName)
 
 	// Pull compressed artifact from ACR
-	artifact, err := pullFromACR(*acrURL, *repository, *tag, *username, *password)
+	artifact, err := pullFromACR()
 	if err != nil {
 		fmt.Printf("Failed to pull artifact from ACR: %v\n", err)
 		os.Exit(1)
@@ -130,7 +162,13 @@ func main() {
 
 	// Process and publish each artifact
 	for fileName, content := range files {
-		apiURL := constructAPIURL(baseAPIURL, fileName, determineArtifactTypeFromFile(fileName))
+		artifactType := determineArtifactTypeFromFile(fileName)
+		if artifactType == "unknown" {
+			fmt.Printf("Skipping unknown artifact type for file: %s\n", fileName)
+			continue
+		}
+
+		apiURL := constructAPIURL(baseAPIURL, fileName, artifactType)
 		statusCode, responseText, err := sendPutRequest(apiURL, accessToken, content)
 		if err != nil {
 			fmt.Printf("Failed to process file %s: %v\n", fileName, err)
