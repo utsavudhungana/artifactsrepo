@@ -2,180 +2,156 @@
 //2. Unzip the Package: The compressed artifact is unzipped into individual files.
 //3. Send PUT Requests: Each file is processed and sent to the Synapse workspace via its respective API.
 
-
 package main
 
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
-	"net/http"
-	"os"
 	"path/filepath"
+	"strings"
 
-	"oras.land/oras-go/v2/registry/remote"
-	"oras.land/oras-go/v2/registry/remote/auth"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/synapse/armsynapse"
+	"github.com/deislabs/oras/pkg/oras"
 )
 
-// Define your variable values here (replace with actual values or fetch from environment)
-var (
-	acrURL             = "your-acr-url.azurecr.io"
-	repository         = "your-repository-name"
-	tag                = "your-tag"
-	username           = "your-username"
-	password           = "your-password"
-	targetWorkspaceName = "your-synapse-workspace"
-)
-
-// Pull the compressed artifact from ACR using ORAS
-func pullFromACR() ([]byte, error) {
-	ref := fmt.Sprintf("%s/%s:%s", acrURL, repository, tag)
-	remoteRepo, err := remote.NewRepository(ref)
+func downloadFromACR(acrUrl, repository, tag string) ([]byte, error) {
+	// Example using ORAS to download from ACR
+	content := []byte{}
+	err := oras.Pull(acrUrl, repository+":"+tag, nil, content)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create repository reference: %v", err)
+		return nil, fmt.Errorf("failed to download from ACR: %v", err)
 	}
-
-	remoteRepo.Client = &auth.Client{
-		Username: username,
-		Password: password,
-	}
-
-	// Pull the artifact
-	var artifact bytes.Buffer
-	_, err = remoteRepo.FetchBytes(nil, &artifact)
-	if err != nil {
-		return nil, fmt.Errorf("failed to pull artifact from ACR: %v", err)
-	}
-
-	fmt.Println("Successfully pulled artifact from ACR")
-	return artifact.Bytes(), nil
+	return content, nil
 }
 
-// Unzip the artifact into individual files
-func unzipArtifact(artifact []byte) (map[string][]byte, error) {
-	files := make(map[string][]byte)
-	r := bytes.NewReader(artifact)
-	zr, err := zip.NewReader(r, int64(len(artifact)))
+func unzipArtifacts(data []byte) (map[string][]byte, error) {
+	artifactMap := make(map[string][]byte)
+	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read zip archive: %v", err)
+		return nil, fmt.Errorf("failed to open zip archive: %v", err)
 	}
 
-	for _, file := range zr.File {
-		rc, err := file.Open()
+	for _, f := range reader.File {
+		rc, err := f.Open()
 		if err != nil {
-			return nil, fmt.Errorf("failed to open file %s: %v", file.Name, err)
+			return nil, fmt.Errorf("failed to open file %s in zip: %v", f.Name, err)
+		}
+		defer rc.Close()
+
+		var buf bytes.Buffer
+		_, err = io.Copy(&buf, rc)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read file %s in zip: %v", f.Name, err)
 		}
 
-		content, err := io.ReadAll(rc)
-		rc.Close()
+		artifactMap[f.Name] = buf.Bytes()
+	}
+	return artifactMap, nil
+}
+
+func publishArtifactToSynapse(client *armsynapse.WorkspaceClient, artifactType, artifactName string, content []byte, credential azcore.TokenCredential, resourceGroupName, targetWorkspaceName string) error {
+	ctx := context.Background()
+
+	switch artifactType {
+	case "notebook":
+		_, err := client.CreateOrUpdateNotebook(ctx, resourceGroupName, targetWorkspaceName, artifactName, content, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read file %s: %v", file.Name, err)
+			return fmt.Errorf("failed to create/update notebook: %v", err)
 		}
-
-		files[file.Name] = content
-	}
-
-	return files, nil
-}
-
-// Send PUT request to Synapse workspace
-func sendPutRequest(url, accessToken string, bodyContent []byte) (int, string, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(bodyContent))
-	if err != nil {
-		return 0, "", fmt.Errorf("failed to create PUT request: %v", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0, "", fmt.Errorf("failed to send PUT request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, "", fmt.Errorf("failed to read response body: %v", err)
-	}
-
-	return resp.StatusCode, string(respBody), nil
-}
-
-// Determine artifact type based on file path
-func determineArtifactTypeFromFile(filePath string) string {
-	switch {
-	case filepath.Dir(filePath) == "notebook":
-		return "notebook"
-	case filepath.Dir(filePath) == "sqlscript":
-		return "sqlscript"
-	case filepath.Dir(filePath) == "kqlscript":
-		return "kqlscript"
-	case filepath.Dir(filePath) == "sparkJobDefinition":
-		return "sparkJobDefinition"
-	case filepath.Dir(filePath) == "dataset":
-		return "dataset"
-	case filepath.Dir(filePath) == "linkedService":
-		return "linkedService"
-	case filepath.Dir(filePath) == "integrationRuntime":
-		return "integrationRuntime"
-	case filepath.Dir(filePath) == "managedVirtualNetwork":
-		return "managedVirtualNetwork"
-	case filepath.Dir(filePath) == "pipeline":
-		return "pipeline"
+	case "sqlscript":
+		_, err := client.CreateOrUpdateSQLScript(ctx, resourceGroupName, targetWorkspaceName, artifactName, content, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create/update SQL script: %v", err)
+		}
+	case "pipeline":
+		_, err := client.CreateOrUpdatePipeline(ctx, resourceGroupName, targetWorkspaceName, artifactName, content, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create/update pipeline: %v", err)
+		}
+	case "linkedService":
+		_, err := client.CreateOrUpdateLinkedService(ctx, resourceGroupName, targetWorkspaceName, artifactName, content, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create/update linked service: %v", err)
+		}
+	case "dataset":
+		_, err := client.CreateOrUpdateDataset(ctx, resourceGroupName, targetWorkspaceName, artifactName, content, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create/update dataset: %v", err)
+		}
+	case "sparkJobDefinition":
+		_, err := client.CreateOrUpdateSparkJobDefinition(ctx, resourceGroupName, targetWorkspaceName, artifactName, content, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create/update spark job definition: %v", err)
+		}
 	default:
-		return "unknown"
+		return fmt.Errorf("unknown artifact type: %s", artifactType)
 	}
+
+	return nil
 }
 
-// Construct API URL for publishing to Synapse
-func constructAPIURL(baseURL, filePath, artifactType string) string {
-	fileName := filepath.Base(filePath)
-	return fmt.Sprintf("%s/%s/%s?api-version=2020-12-01", baseURL, artifactType, fileName)
+// Create a client using DefaultAzureCredential
+func createWorkspaceClient(subscriptionID string) (*armsynapse.WorkspaceClient, error) {
+	// Get default credentials using DefaultAzureCredential
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get default Azure credentials: %v", err)
+	}
+
+	// Create Synapse Workspace client
+	client, err := armsynapse.NewWorkspaceClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Synapse workspace client: %v", err)
+	}
+
+	return client, nil
 }
 
-func main() {
-	// Fetch Bearer token
-	accessToken, err := azCLI("account get-access-token --resource=https://dev.azuresynapse.net/ --query accessToken --output tsv")
+func processArtifactsFromACR(acrUrl, repository, tag string, client *armsynapse.WorkspaceClient, credential azcore.TokenCredential, resourceGroupName, targetWorkspaceName string) error {
+	// Download the zip package from ACR
+	data, err := downloadFromACR(acrUrl, repository, tag)
 	if err != nil {
-		fmt.Printf("Failed to retrieve access token: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
-	baseAPIURL := fmt.Sprintf("https://%s.dev.azuresynapse.net", targetWorkspaceName)
-
-	// Pull compressed artifact from ACR
-	artifact, err := pullFromACR()
+	// Unzip the artifacts
+	artifactMap, err := unzipArtifacts(data)
 	if err != nil {
-		fmt.Printf("Failed to pull artifact from ACR: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
-	// Unzip the artifact
-	files, err := unzipArtifact(artifact)
-	if err != nil {
-		fmt.Printf("Failed to unzip artifact: %v\n", err)
-		os.Exit(1)
+	// Process in the correct order of artifact types
+	artifactTypesOrder := []string{
+		"integrationRuntime",
+		"linkedService",
+		"dataset",
+		"notebook",
+		"sqlscript",
+		"sparkJobDefinition",
+		"pipeline",
 	}
 
-	// Process and publish each artifact
-	for fileName, content := range files {
-		artifactType := determineArtifactTypeFromFile(fileName)
-		if artifactType == "unknown" {
-			fmt.Printf("Skipping unknown artifact type for file: %s\n", fileName)
-			continue
+	// Iterate over the ordered artifact types and publish
+	for _, artifactType := range artifactTypesOrder {
+		for fileName, content := range artifactMap {
+			artifactName := filepath.Base(fileName)
+			folderHierarchy := filepath.Dir(fileName) // Use the directory structure to maintain hierarchy
+
+			// Check if the current file matches the current artifact type based on the folder hierarchy
+			if strings.Contains(folderHierarchy, artifactType) {
+				err := publishArtifactToSynapse(client, artifactType, artifactName, folderHierarchy, content, credential, resourceGroupName, targetWorkspaceName)
+				if err != nil {
+					return fmt.Errorf("failed to publish artifact %s: %v", artifactName, err)
+				}
+				fmt.Printf("Successfully published artifact: %s (type: %s)\n", artifactName, artifactType)
+			}
 		}
-
-		apiURL := constructAPIURL(baseAPIURL, fileName, artifactType)
-		statusCode, responseText, err := sendPutRequest(apiURL, accessToken, content)
-		if err != nil {
-			fmt.Printf("Failed to process file %s: %v\n", fileName, err)
-			continue
-		}
-
-		fmt.Printf("Successfully processed %s with status code %d\n", fileName, statusCode)
-		fmt.Println(responseText)
 	}
+
+	return nil
 }
