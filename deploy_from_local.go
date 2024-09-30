@@ -160,3 +160,34 @@ func processArtifactsFromLocal(zipFilePath string, client *armsynapse.WorkspaceC
 
 	return nil
 }
+
+func main() {
+	// Variables
+	subscriptionID := "your-subscription-id"     // Replace with your Azure Subscription ID
+	resourceGroupName := "your-resource-group"   // Replace with your Resource Group Name
+	targetWorkspaceName := "your-workspace-name" // Replace with your Synapse Workspace Name
+	zipFilePath := "path/to/your/zipfile.zip"    // Replace with the path to your local zip file
+
+	// Create Synapse Workspace client
+	client, err := createWorkspaceClient(subscriptionID)
+	if err != nil {
+		fmt.Printf("Error creating Synapse client: %v\n", err)
+		return
+	}
+
+	// Get default credentials
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		fmt.Printf("Error obtaining default Azure credentials: %v\n", err)
+		return
+	}
+
+	// Process the artifacts from the local zip file
+	err = processArtifactsFromLocal(zipFilePath, client, cred, resourceGroupName, targetWorkspaceName)
+	if err != nil {
+		fmt.Printf("Error processing artifacts: %v\n", err)
+		return
+	}
+
+	fmt.Println("Artifacts published successfully.")
+}
