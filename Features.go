@@ -6,8 +6,12 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 // Read .tar.gz file from local folder
@@ -145,3 +149,12 @@ func main() {
 		fmt.Printf("Error loading replacements from YAML: %v\n", err)
 		return
 	}
+
+	// Replace strings in .json files
+	replaceStringsInJSONFiles(artifactMap, replacements)
+
+	// Print modified artifacts for verification
+	for fileName, content := range artifactMap {
+		fmt.Printf("Modified content of %s:\n%s\n", fileName, string(content))
+	}
+}
